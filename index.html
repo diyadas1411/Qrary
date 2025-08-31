@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Qrary-SCAN BORROW RETURN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+    h1 {
+      text-align: center;
+      margin: 30px 0;
+      color: #00ffd5;
+      font-size: 2.5rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 950px;
+      margin: auto;
+      transition: transform 0.8s ease-in-out;
+    }
+    .section {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #00ffd5;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    input, select {
+      padding: 12px;
+      font-size: 16px;
+      width: 80%;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+    }
+    button {
+      padding: 10px 25px;
+      margin: 10px 5px;
+      background: #00ffd5;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.3s ease;
+    }
+    button::after {
+      content: "";
+      position: absolute;
+      background: #0ff;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: -100%;
+      transition: 0.3s;
+      z-index: -1;
+    }
+    button:hover::after { left: 0; }
+    #bookSection, #adminPanel { display: none; }
+    .book-container {
+      display: flex;
+      overflow-x: auto;
+      padding: 20px 0;
+      gap: 20px;
+      scroll-snap-type: x mandatory;
+    }
+    /* 🌸 Chatbot Styling */
+#chatbotToggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #00ffd5;
+  color: #000;
+  font-size: 24px;
+  padding: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 0 10px #00ffd5;
+}
+
+#chatbotPopup {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 280px;
+  max-height: 400px;
+  background: #1f1f3f;
+  color: #00ffd5;
+  border-radius: 15px;
+  box-shadow: 0 0 15px #00ffd5;
+  overflow: hidden;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+#chatHeader {
+  background: #302b63;
+  padding: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #00ffd5;
+}
+
+#closeChat {
+  cursor: pointer;
+  color: #fff;
+  font-size: 20px;
+}
+
+#chatMessages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#chatMessages div {
+  margin-bottom: 8px;
+}
+
+#chatInput {
+  padding: 10px;
+  border: none;
+  border-top: 1px solid #444;
+  background: #2e2e50;
+  color: #00ffd5;
+  outline: none;
+  font-size: 14px;
+  width: calc(100% - 80px);
+}
+
+#chatbotPopup button {
+  background: #00ffd5;
+  color: #000;
+  border: none;
+  width: 60px;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+    .book-card {
+      flex: 0 0 auto;
+      width: 200px;
+      background: #1a1a3d;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #00ffd5;
+      padding: 15px;
+      scroll-snap-align: start;
+      text-align: center;
+    }
+    .book-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .summary-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.summary-content {
+  background: #1f1f3f;
+  color: #00ffd5;
+  padding: 25px;
+  border-radius: 15px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 15px #00ffd5;
+  position: relative;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #00ffd5;
+}
+    .status {
+      font-weight: bold;
+    }
+    .available { color: #00ff88; }
+    .borrowed { color: #ff5555; }
+    .btn-small {
+      padding: 6px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .animated-border-btn {
+  position: relative;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #00ffd5;
+  background: #1a1a3d;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 1;
+}
+    #logoutBtn {
+      margin-top: 20px;
+      background: crimson;
+      color: white;
+    }
+    .admin-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .admin-table th, .admin-table td {
+      padding: 10px;
+      border-bottom: 1px solid #aaa;
+    }
+    .admin-table th {
+      background: #302b63;
+      color: #00ffd5;
+    }
+    #adminLogs {
+      margin-top: 20px;
+      background: #1e1e30;
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 10px #00ffd5;
+    }
+    #adminLogs h3 {
+      color: #00ffd5;
+      margin-bottom: 10px;
+    }
+    .ecard {
+      background: #1f1f3f;
+      border: 2px dashed #00ffd5;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 15px;
+      display: inline-block;
+      text-align: center;
+    }
+    .ecard h3 { margin-bottom: 10px; color: #00ffd5; }
+    .ecard p { font-size: 16px; }
+    
+    /* Glowing genre dropdown styles */
+    #genreFilter {
+      display: none; /* hidden initially */
+      margin: 15px auto;
+      width: 80%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 2px solid #00ffd5;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ffd5;
+      text-align: center;
+      box-shadow:
+        0 0 8px #00ffd5,
+        0 0 15px #00ffd5,
+        0 0 20px #00ffd5,
+        0 0 30px #00ffd5;
+      transition: box-shadow 0.3s ease-in-out;
+      cursor: pointer;
+    }
+    #genreFilter:hover, #genreFilter:focus {
+      box-shadow:
+        0 0 12px #00fff0,
+        0 0 25px #00fff0,
+        0 0 40px #00fff0,
+        0 0 60px #00fff0;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀QRARY</h1>
+  <div class="container">
+    <div class="section" id="authSection">
+      <h2>🔐 Login / Signup</h2>
+      <input type="text" id="rollNoInput" placeholder="Enter Roll Number" />
+      <select id="userType">
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+        <option value="admin">Admin</option>
+      </select>
+      <div id="qrcode" style="margin: 20px;"></div>
+      <button onclick="generateQR()">Generate QR</button>
+      <button onclick="signup()">Signup</button>
+      <button onclick="login()">Login</button>
+    </div>
+<!-- 🌸 Floating Chatbot Container -->
+<div id="chatbotToggle">💬</div>
+<div id="chatbotPopup">
+  <div id="chatHeader">📚 QRaryBot <span id="closeChat">×</span></div>
+  <div id="chatMessages"></div>
+  <input type="text" id="chatInput" placeholder="Ask me something..." />
+  <button onclick="sendMessage()">Send</button> 
+</div>
+    <div class="section" id="bookSection">
+      <h2>📚 Book Shelf</h2>
+      <!-- Glowing Genre Dropdown -->
+      <select id="genreFilter" class="glow-dropdown">
+        <option value="all">All Genres</option>
+        <option value="Technology">Technology</option>
+<option value="Mathematics">Mathematics</option>
+<option value="Horror">Horror</option>
+<option value="Management">Management</option>
+<option value="Fiction">Fiction</option>
+<option value="Self help">Self Help</option>
+      </select>
+      <div class="book-container" id="bookList"></div>
+      <button id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
+<div id="summaryModal" class="summary-modal">
+  <div class="summary-content">
+    <span class="close-btn" onclick="closeSummary()">×</span>
+    <h2 id="modalTitle"></h2>
+    <p><strong>Author:</strong> <span id="modalAuthor"></span></p>
+    <p id="modalSummary"></p>
+  </div>
+</div>
+    <div class="section" id="adminPanel">
+      <h2>🛠️ Admin Panel</h2>
+      <table class="admin-table" id="userTable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Type</th>
+            <th>Borrowed Books</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="adminLogs">
+        <h3>📄 Borrow/Return Log</h3>
+        <div id="logList"></div>
+      </div>
+      <h3>🎫 Generate Library e-Card</h3>
+      <input type="text" id="ecardInput" placeholder="Enter Roll Number for e-Card" />
+      <button onclick="generateECard()">Generate e-Card</button>
+      <div id="ecardContainer"></div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const allBooks = [
+  {
+    title: "Good To Great",
+    author: "Jim Collins",
+    image: "mgmt1.jpg",
+    genre: "Management",
+    summary: "Analyzes companies that made the leap from good to great and sustained that success."
+  },
+  {
+    title: "Engineering Mathematics II",
+    author: "S.Chand",
+    image: "maths1.jpg",
+    genre: "Mathematics",
+    summary: "Comprehensive textbook covering vector calculus, differential equations."
+  },
+  {
+    title: "Theory of Computer Science",
+    author: "K. L. P. Mishra",
+    image: "tech1.jpg",
+    genre: "Technology",
+    summary: "Explores theoretical principles behind computing such as automata and formal languages."
+  },
+  {
+    title: "Introduction to Algorithms",
+    author: "Thomas.H Cormen",
+    image: "tech2.jpg",
+    genre: "Technology",
+    summary: "A comprehensive guide to algorithms."
+  },
+  {
+    title: "Higher Engineering Mathematics",
+    author: "B. S. Grewal",
+    image: "maths2.jpg",
+    genre: "Mathematics",
+    summary: "Basic engineering mathematics topics such as calculus, matrices, and differential equations."
+  },
+  {
+    title: "Essentials of Management",
+    author: "Heinz Weihrich",
+    image: "mgmt2.jpg",
+    genre: "Management",
+    summary: "Outlines essential functions of management such as planning, organizing, and leading."
+  },
+  {
+    title: "The Haunting of Hill House",
+    author: "Shirley Jackson",
+    image: "horror2.jpg",
+    genre: "Horror",
+    summary: "A chilling tale of a group investigating a cursed mansion with increasingly disturbing consequences."
+  },
+  {
+    title: "The Palace of Illusions",
+    author: "Chitra Banerjee Divakaruni",
+    image: "horror1.jpg",
+    genre: "Horror",
+    summary: "A mythological epic laced with mystical and haunting elements."
+  },
+  {
+    title: "Blindness",
+    author: "José Saramago",
+    image: "fic2.jpg",
+    genre: "Fiction",
+    summary: "A gripping allegory where an epidemic of blindness strikes an unnamed city."
+  },
+  {
+    title: "Things Fall Apart",
+    author: "Chinua Achebe",
+    image: "fic1.jpg",
+    genre: "Fiction",
+    summary: "The tragic story of an Igbo warrior and the impact of colonialism on his society."
+  },
+  {
+    title: "The 7 Habits of Highly Effective People",
+    author: "Stephen R. Covey",
+    image: "self1.jpg",
+    genre: "Self help",
+    summary: "A guide to personal and professional effectiveness through timeless principles."
+  },
+  {
+    title: "Atomic Habits",
+    author: "James Clear",
+    image: "self2.jpg",
+    genre: "Self help",
+    summary: "Practical strategies to build good habits and break bad ones for lasting change."
+  }
+];
+    const BORROW_DAYS = 12;
+    let currentUser = null;
+    let currentType = null;
+    function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendChat(`🧑‍🎓 You: ${message}`);
+  const response = getBotResponse(message);
+  appendChat(`🤖 QRaryBot: ${response}`);
+  input.value = "";
+}
+
+function appendChat(text) {
+  const box = document.getElementById("chatMessages");  
+  const line = document.createElement("div");
+  line.textContent = text;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+function getBotResponse(message) {
+  const msg = message.toLowerCase();
+  const userData = currentUser ? JSON.parse(localStorage.getItem("user_" + currentUser)) : null;
+
+  const emojis = {
+    greet: "🌟",
+    recommend: "📚",
+    info: "🔍",
+    love: "💖",
+    due: "⏰",
+    check: "✅",
+    error: "❌",
+    card: "🪪",
+    sparkle: "✨"
+  };
+
+  // Genre matching
+  // Step 1: Genre keyword mapping
+const genreKeywords = {
+  technology: ["technology", "tech", "computer", "programming", "algorithms","science","books"],
+  mathematics: ["math", "mathematics", "calculus", "equations", "books"],
+  horror: ["horror", "scary", "ghost", "haunted", "spooky", "books"],
+  management: ["management", "business", "admin", "mba", "books"],
+  fiction: ["fiction", "novel", "story", "literature", "books"],
+  selfhelp: ["self help", "motivation", "habits", "self-improvement", "books"]
+};
+
+// Step 2: Detect genre from user message
+const lowerMsg = msg.toLowerCase();
+let matchedGenre = null;
+
+// First try matching by keyword
+for (const [genre, keywords] of Object.entries(genreKeywords)) {
+  if (keywords.some(keyword => lowerMsg.includes(keyword))) {
+    matchedGenre = genre;
+    break;
+  }
+}
+
+// Step 3: Fall back to exact genre name match if no keyword match found
+if (!matchedGenre) {
+  const genres = [...new Set(allBooks.map(book => book.genre.toLowerCase()))];
+  matchedGenre = genres.find(g => lowerMsg.includes(g));
+}
+
+// Step 4: Respond with matching books
+if (matchedGenre) {
+  const books = allBooks.filter(b => b.genre.toLowerCase() === matchedGenre);
+  if (books.length === 0) {
+    return `${emojis.error} Oops! I couldn't find any books in the "${matchedGenre}" genre.`;
+  }
+
+  return `${emojis.recommend} Here are some delightful ${matchedGenre} books for you:\n` +
+    books.map(b => `• ${b.title} by ${b.author}`).join("\n");
+}
+  // Borrowed books info
+  if (msg.includes("borrowed") || msg.includes("my books")) {
+    if (!userData) return `${emojis.error} Please login first so I can peek at your book list. 📖`;
+    
+    const borrowed = Object.entries(userData.borrowedBooks || {});
+    if (borrowed.length === 0) return `📭 You haven’t borrowed any books yet. Time to explore the shelf!`;
+
+    return borrowed.map(([title, date]) => {
+      const borrowDate = new Date(date);
+      const dueDate = new Date(borrowDate);
+      dueDate.setDate(borrowDate.getDate() + BORROW_DAYS);
+      return `📘 *${title}*\n🗓 Borrowed: ${borrowDate.toLocaleDateString()} | Due: ${dueDate.toLocaleDateString()} ${emojis.due}`;
+    }).join("\n\n");
+  }
+
+  // Membership info
+  if (msg.includes("membership") || msg.includes("ecard")) {
+    if (!userData) return `${emojis.error} Please login to check your shiny membership card.`;
+
+    const count = Object.keys(userData.borrowedBooks).length;
+    return `${emojis.card} Your Library e-Card:\n• Roll No: ${currentUser}\n• Type: ${userData.type}\n• Books Borrowed: ${count}\n• Status: Active & Awesome ${emojis.sparkle}`;
+  }
+
+  // Greetings
+  if (msg.includes("hello") || msg.includes("hi")) {
+    return `${emojis.greet} Heya, reader friend! I'm QRaryBot 🐧 here to help you borrow, return, and explore amazing reads!`;
+  }
+
+  // Default fallback
+  return `🐧 I'm QRaryBot! Here's what I can help you with:\n• "Recommend books"\n• "What have I borrowed?"\n• "Show my membership"\nLet’s get reading! 📖✨`;
+}
+    function generateQR() {
+      const rollNo = document.getElementById("rollNoInput").value;
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = "";
+      if (rollNo.trim() !== "") {
+        new QRCode(qrContainer, { text: rollNo, width: 128, height: 128 });
+      } else {
+        alert("Enter your Roll Number!");
+      }
+    }
+    function signup() {
+      const rollNo = document.getElementById("rollNoInput").value.trim();
+      const userType = document.getElementById("userType").value;
+      if (!rollNo) return alert("Enter your Roll Number!");
+      if (localStorage.getItem("user_" + rollNo)) {
+        alert("User already exists. Please login.");
+      } else {
+        localStorage.setItem("user_" + rollNo, JSON.stringify({ type: userType, borrowedBooks: {} }));
+        alert("Signup successful!");
+      }
+    }
+    function login() {
+      const rollNo = document.getElementById("rollNoInput").value.trim();
+      const userData = localStorage.getItem("user_" + rollNo);
+      if (!userData) return alert("User not found. Please sign up.");
+      currentUser = rollNo;
+      currentType = JSON.parse(userData).type;
+      localStorage.setItem("sessionUser", rollNo);
+      document.getElementById("authSection").style.display = "none";
+      if (currentType === "admin") {
+        document.getElementById("adminPanel").style.display = "block";
+        showAdminPanel();
+      } else {
+        document.getElementById("bookSection").style.display = "block";
+        document.getElementById("genreFilter").style.display = "block"; // show genre filter
+        showBooks();
+        // Add event listener for genre filter dropdown
+        const genreSelect = document.getElementById("genreFilter");
+        genreSelect.value = "all"; // default to all
+        genreSelect.addEventListener("change", (e) => {
+          showBooks(e.target.value);
+        });
+      }
+    }
+    function logout() {
+      localStorage.removeItem("sessionUser");
+      currentUser = null;
+      currentType = null;
+      document.getElementById("authSection").style.display = "block";
+      document.getElementById("bookSection").style.display = "none";
+      document.getElementById("adminPanel").style.display = "none";
+      document.getElementById("qrcode").innerHTML = "";
+      document.getElementById("ecardContainer").innerHTML = "";
+    }
+    function getAllBorrowedBooks() {
+      const borrowed = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("user_")) {
+          const data = JSON.parse(localStorage.getItem(key));
+          for (const book in data.borrowedBooks) {
+            if (data.borrowedBooks[book]) borrowed[book] = key.slice(5);
+          }
+        }
+      }
+      return borrowed;
+    }
+    function isOverdue(dateStr) {
+      const borrowDate = new Date(dateStr);
+      const now = new Date();
+      const diffDays = (now - borrowDate) / (1000 * 3600 * 24);
+      return diffDays > BORROW_DAYS;
+    }
+function showBooks(selectedGenre = "all") {
+  const container = document.getElementById("bookList");
+  container.innerHTML = "";
+  const userData = JSON.parse(localStorage.getItem("user_" + currentUser));
+  const borrowedBooksAll = getAllBorrowedBooks();
+
+  allBooks.forEach((book, i) => {
+    if (selectedGenre !== "all" && book.genre !== selectedGenre) return;
+
+    const isBorrowedByUser = userData.borrowedBooks[book.title];
+    const isBorrowed = borrowedBooksAll[book.title];
+    const status = isBorrowed ? "Borrowed" : "Available";
+    const overdue = isBorrowedByUser && isOverdue(isBorrowedByUser) ? "⚠️ Due" : "";
+
+    let dueDateStr = "";
+    if (isBorrowedByUser) {
+      const borrowDate = new Date(isBorrowedByUser);
+      const dueDate = new Date(borrowDate);
+      dueDate.setDate(dueDate.getDate() + BORROW_DAYS);
+      dueDateStr = ` (Due: ${dueDate.toLocaleDateString()})`;
+    }
+
+    const bookCard = document.createElement("div");
+    bookCard.className = "book-card";
+    bookCard.innerHTML = `
+      <img src="${book.image}" alt="${book.title}" style="cursor: pointer;">
+      <h4 style="cursor: pointer;">${book.title}</h4>
+      <div class="status ${status === 'Available' ? 'available' : 'borrowed'}">
+        ${status} ${overdue}${dueDateStr}
+      </div>
+      ${(currentType !== "admin" && (!isBorrowed || isBorrowedByUser)) 
+          ? `<button class="btn-small" onclick="toggleBorrow(${i})">${isBorrowedByUser ? 'Return' : 'Borrow'}</button>` 
+          : ''}
+      <p class="book-summary" style="display:none; margin-top: 8px; font-size: 14px; color: #b2ffff;">
+        ${book.summary || "No summary available."}
+      </p>
+    `;
+    container.appendChild(bookCard);
+
+    const img = bookCard.querySelector("img");
+    const title = bookCard.querySelector("h4");
+    const summary = bookCard.querySelector(".book-summary");
+
+    function toggle() {
+      summary.style.display = (summary.style.display === "none") ? "block" : "none";
+    }
+
+    img.addEventListener("click", toggle);
+    title.addEventListener("click", toggle);
+  });
+}
+function toggleSummary(button) {
+  const summary = button.previousElementSibling;
+  const currentDisplay = window.getComputedStyle(summary).display;
+
+  if (currentDisplay === "none") {
+    summary.style.display = "block";
+    button.textContent = "Hide Summary";
+  } else {
+    summary.style.display = "none";
+    button.textContent = "Show Summary";
+  }
+}
+function toggleBorrow(index) {
+  const book = allBooks[index];
+  const userData = JSON.parse(localStorage.getItem("user_" + currentUser));
+  const borrowedBooksAll = getAllBorrowedBooks();
+  if (userData.borrowedBooks[book.title]) {
+    // Return book
+    delete userData.borrowedBooks[book.title];
+    addLog(`${currentUser} returned ${book.title}`);
+  } else {
+    // Borrow book
+    if (borrowedBooksAll[book.title]) {
+      alert("Sorry, this book is currently borrowed by someone else.");
+      return;
+    }
+    userData.borrowedBooks[book.title] = new Date().toISOString();
+    addLog(`${currentUser} borrowed ${book.title}`);
+  }
+  localStorage.setItem("user_" + currentUser, JSON.stringify(userData));
+  showBooks(document.getElementById("genreFilter").value);
+  if (currentType === "admin") showAdminPanel();
+}
+    function addLog(text) {
+      let logs = JSON.parse(localStorage.getItem("borrowLogs") || "[]");
+      logs.unshift({ text, time: new Date().toLocaleString() });
+      if (logs.length > 100) logs.pop(); // limit log size
+      localStorage.setItem("borrowLogs", JSON.stringify(logs));
+    }
+    function showBookSummary(index) {
+  const book = allBooks[index];
+  document.getElementById("modalTitle").textContent = book.title;
+  document.getElementById("modalAuthor").textContent = book.author || "Unknown";
+  document.getElementById("modalSummary").textContent = book.summary || "No summary available.";
+  document.getElementById("summaryModal").style.display = "flex";
+}
+
+function closeSummary() {
+  document.getElementById("summaryModal").style.display = "none";
+}
+    function showAdminPanel() {
+      // Populate user table
+      const tbody = document.querySelector("#userTable tbody");
+      tbody.innerHTML = "";
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("user_")) {
+          const user = key.slice(5);
+          const data = JSON.parse(localStorage.getItem(key));
+          const borrowed = Object.keys(data.borrowedBooks).length;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${user}</td><td>${data.type}</td><td>${borrowed}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+      // Show logs
+      const logList = document.getElementById("logList");
+      logList.innerHTML = "";
+      const logs = JSON.parse(localStorage.getItem("borrowLogs") || "[]");
+      logs.forEach(log => {
+        const div = document.createElement("div");
+        div.textContent = `[${log.time}] ${log.text}`;
+        logList.appendChild(div);
+      });
+    }
+function generateECard() {
+  const rollNo = document.getElementById("ecardInput").value.trim();
+  const ecardContainer = document.getElementById("ecardContainer");
+  ecardContainer.innerHTML = "";
+  if (!rollNo) return alert("Enter Roll Number!");
+  const userData = localStorage.getItem("user_" + rollNo);
+  if (!userData) return alert("User not found.");
+  const user = JSON.parse(userData);
+  // Block admin from generating e-card
+  if (user.type === "admin") {
+    alert("Admins cannot have a library e-Card.");
+    return;
+  }
+  const borrowedBooksCount = Object.keys(user.borrowedBooks).length;
+  const membershipStatus = "Active";
+  const ecard = document.createElement("div");
+  ecard.className = "ecard";
+  ecard.innerHTML = `
+    <h3>Library e-Card</h3>
+    <p><strong>Roll Number:</strong> ${rollNo}</p>
+    <p><strong>Books Borrowed:</strong> ${borrowedBooksCount}</p>
+    <p><strong>Membership Status:</strong> ${membershipStatus}</p>
+  `;
+  ecardContainer.appendChild(ecard);
+}
+     window.onload = () => {
+  // ✅ Fix 3: Toggle and Close Chatbot
+  document.getElementById("chatbotToggle").onclick = () => {
+    document.getElementById("chatbotPopup").style.display = "flex";
+  };
+  document.getElementById("closeChat").onclick = () => {
+    document.getElementById("chatbotPopup").style.display = "none";
+  };
+
+  // ✅ Fix 4: Send on Enter
+  document.getElementById("chatInput").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  // ✅ Your original session/auth/admin logic
+  const sessionUser = localStorage.getItem("sessionUser");
+  if (sessionUser) {
+    const userData = localStorage.getItem("user_" + sessionUser);
+    if (userData) {
+      currentUser = sessionUser;
+      currentType = JSON.parse(userData).type;
+      document.getElementById("authSection").style.display = "none";
+      if (currentType === "admin") {
+        document.getElementById("adminPanel").style.display = "block";
+        showAdminPanel();
+      } else {
+        document.getElementById("bookSection").style.display = "block";
+        document.getElementById("genreFilter").style.display = "block";
+        showBooks();
+        const genreSelect = document.getElementById("genreFilter");
+        genreSelect.value = "all";
+        genreSelect.addEventListener("change", (e) => {
+          showBooks(e.target.value);
+        });
+      }
+    }
+  }
+};
+  </script>
+</body>
+</html>
